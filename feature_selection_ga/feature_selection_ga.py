@@ -4,6 +4,8 @@ import numpy as np
 from deap import base, creator, tools
 
 from .fitness_function import FitnessFunction
+from .individual_gen_function import randint_scale
+from .ga_operation_function import mut_flip_bit_keep_point_num, cx_two_point_adv
 
 
 class FeatureSelectionGA:
@@ -104,7 +106,7 @@ class FeatureSelectionGA:
 
     def _init_toolbox(self):
         toolbox = base.Toolbox()
-        toolbox.register("attr_bool", random.randint, 0, 1)
+        toolbox.register("attr_bool", randint_scale, self.true_proportion)
         # Structure initializers
         toolbox.register(
             "individual",
@@ -118,8 +120,8 @@ class FeatureSelectionGA:
 
     def _default_toolbox(self):
         toolbox = self._init_toolbox()
-        toolbox.register("mate", tools.cxTwoPoint)
-        toolbox.register("mutate", tools.mutFlipBit, indpb=0.1)
+        toolbox.register("mate", cx_two_point_adv)
+        toolbox.register("mutate", mut_flip_bit_keep_point_num, indpb=0.1)
         toolbox.register("select", tools.selTournament, tournsize=3)
         toolbox.register("evaluate", self.evaluate)
         return toolbox
@@ -127,7 +129,7 @@ class FeatureSelectionGA:
     def get_final_scores(self, pop, fits):
         self.final_fitness = list(zip(pop, fits))
 
-    def generate(self, n_pop, cxpb=0.5, mutxpb=0.2, ngen=5, set_toolbox=False):
+    def generate(self, n_pop, cxpb=0.5, mutxpb=0.2, ngen=5, set_toolbox=False, target_feature_num=None):
 
         """
         Generate evolved population
@@ -144,6 +146,8 @@ class FeatureSelectionGA:
             set_toolbox : {boolean}
                           If True then you have to create custom toolbox before calling
                           method. If False use default toolbox.
+            target_feature_num : {int}
+                    number of selected features to return
         Returns
         --------
             Fittest population
@@ -155,6 +159,11 @@ class FeatureSelectionGA:
                     n_pop, cxpb, mutxpb, ngen
                 )
             )
+        if not target_feature_num:
+            target_feature_num = self.n_features // 2
+
+        self.true_proportion = target_feature_num / self.n_features
+        print(f"Selected features proportion is : {self.true_proportion}")
 
         if not set_toolbox:
             self.toolbox = self._default_toolbox()

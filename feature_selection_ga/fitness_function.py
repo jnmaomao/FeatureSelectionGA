@@ -3,6 +3,7 @@ from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import StratifiedKFold
 
 
+
 class FitnessFunction:
     def __init__(self, n_splits=5, *args, **kwargs):
         """

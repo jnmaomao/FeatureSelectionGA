@@ -13,9 +13,10 @@
 
 """
 import numpy as np
+import random
 
 
-def cxTwoPoint_adv(ind1, ind2):
+def cx_two_point_adv(ind1, ind2):
     """Executes a two-point crossover on the input :term:`sequence`
     individuals. The two individuals are modified in place and both keep
     their original length and selected feature num size.
@@ -51,3 +52,45 @@ def cxTwoPoint_adv(ind1, ind2):
             ind2[i] = 0
 
     return ind1, ind2
+
+
+def mut_flip_bit_keep_point_num(individual, indpb):
+    """Flip the value of the attributes of the input individual and return the
+    mutant. The *individual* is expected to be a :term:`sequence` and the values of the
+    attributes shall stay valid after the ``not`` operator is called on them.
+    The *indpb* argument is the probability of each attribute to be
+    flipped. This mutation is usually applied on boolean individuals.
+
+    :param individual: Individual to be mutated.
+    :param indpb: Independent probability for each attribute to be flipped.
+    :returns: A tuple of one individual.
+
+    This function uses the :func:`~random.random` function from the python base
+    :mod:`random` module.
+    """
+
+    feature_num = len(np.nonzero(np.asarray(individual))[0])
+
+    for i in range(len(individual)):
+        if random.random() < indpb:
+            individual[i] = type(individual[i])(not individual[i])
+
+    # make the feature numbers consistent
+    individual_new_np = np.asarray(individual)
+    feature_num_new = len(np.nonzero(individual_new_np)[0])
+
+    diff_feature_num = feature_num - feature_num_new
+    if diff_feature_num > 0:
+        # add featrue for consistent
+        fix_index = np.random.choice(np.where(individual_new_np == 0)[0], diff_feature_num, replace=False)
+        for index in fix_index:
+            individual[index] = 1
+    elif diff_feature_num < 0:
+        # remove featrue for consistent
+        # attention: random or numpy.random is resample cause index has same value,must set replace=False
+        fix_index = np.random.choice(np.where(individual_new_np == 1)[0], abs(diff_feature_num), replace=False)
+
+        for index in fix_index:
+            individual[index] = 0
+
+    return individual,
